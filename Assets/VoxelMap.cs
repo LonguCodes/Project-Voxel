@@ -1,25 +1,98 @@
-﻿using System;
-using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
 
 public class VoxelMap : MonoBehaviour
 {
-	private Dictionary<Vector3Int, VoxelType> _Voxels = new Dictionary<Vector3Int, VoxelType>();
+	#region Singleton
 
-	public VoxelType this[Vector3Int position] => _Voxels.TryGetValue(position, out var state) ? state : VoxelType.Empty;
-
-	public void SetVoxel(Vector3Int position, VoxelType state, bool update = true)
+	/// <summary>
+	/// Globaly avaliable instance of the VoxelMap
+	/// </summary>
+	public static VoxelMap Instance
 	{
-		var currentState = this[position];
-		if (currentState == state)
-			return;
-		_Voxels[position] = state;
-		if (update)
-			UpdateMap();
+		get
+		{
+			if (_Instance is null)
+				new GameObject(nameof(VoxelMap)).AddComponent<VoxelMap>();
+			return _Instance;
+		}
 	}
 
-	public void SetVoxelBlock(Vector3Int fromPosition, Vector3Int toPosition, VoxelType state)
+	/// <summary>
+	/// Private instance of the VoxelMap
+	/// </summary>
+	private static VoxelMap _Instance;
+
+	/// <summary>
+	/// Awake function to set up the singleton
+	/// </summary>
+	private void Awake()
+	{
+		if (_Instance is null)
+			_Instance = this;
+		else
+			Destroy(gameObject);
+	}
+
+	#endregion Singleton
+
+	/// <summary>
+	/// Chunks in the world
+	/// </summary>
+	private Dictionary<Vector3Int, Chunk> _Chunks = new Dictionary<Vector3Int, Chunk>();
+
+	/// <summary>
+	/// Gets the type of the voxel from it's world position
+	/// </summary>
+	/// <param name="position">World position of the voxel</param>
+	/// <returns></returns>
+	public VoxelType this[Vector3Int position] => _Chunks.TryGetValue(GetChunkPosition(position), out var chunk) ? chunk[position] : VoxelType.Empty;
+
+	/// <summary>
+	/// Calculates the position of the chunk from the world position of the voxel
+	/// </summary>
+	/// <param name="voxelPosition">World position of the voxel</param>
+	/// <returns>Position of the coresponding chunk</returns>
+	public static Vector3Int GetChunkPosition(Vector3Int voxelPosition) => new Vector3Int(Mathf.FloorToInt(voxelPosition.x / (float)Chunk.CHUNK_SIZE), Mathf.FloorToInt(voxelPosition.y / (float)Chunk.CHUNK_SIZE), Mathf.FloorToInt(voxelPosition.z / (float)Chunk.CHUNK_SIZE));
+
+	/// <summary>
+	/// Check if a chunk with given position exists
+	/// If so, sets it to the <paramref name="chunk"/>
+	/// Just a wrapper for TryGetValue of Dictionary
+	/// </summary>
+	/// <param name="position">Position of the chunk</param>
+	/// <param name="chunk">The chunk if it exists</param>
+	/// <returns>Does the chunk exist</returns>
+	public bool TryGetChunk(Vector3Int position, out Chunk chunk) => _Chunks.TryGetValue(position, out chunk);
+
+	/// <summary>
+	/// Sets single voxel
+	/// </summary>
+	/// <param name="position">Position of the voxel</param>
+	/// <param name="type">Type of the voxel</param>
+	/// <param name="update">Should the map be updated after the set</param>
+	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true)
+	{
+		// Check if chunk that would hold the block exists
+		// If not, create one
+		if (!TryGetChunk(GetChunkPosition(position), out var chunk))
+		{
+			chunk = Chunk.CreateChunk(GetChunkPosition(position));
+			_Chunks.Add(chunk.Position, chunk);
+		}
+
+		// Sets the voxel
+		chunk.SetVoxel(position, type, update);
+	}
+
+	/// <summary>
+	/// Sets voxels from <paramref name="fromPosition"/> to <paramref name="toPosition"/> to a given type
+	/// For testing purposes
+	/// </summary>
+	/// <param name="fromPosition">Start position</param>
+	/// <param name="toPosition">End position</param>
+	/// <param name="type">To what it should be change</param>
+	public void SetVoxelBlock(Vector3Int fromPosition, Vector3Int toPosition, VoxelType type)
 	{
 		for (int x = fromPosition.x; x <= toPosition.x; x++)
 		{
@@ -27,22 +100,40 @@ public class VoxelMap : MonoBehaviour
 			{
 				for (int z = fromPosition.z; z <= toPosition.z; z++)
 				{
-					SetVoxel(new Vector3Int(x, y, z), state, false);
+					SetVoxel(new Vector3Int(x, y, z), type, false);
 				}
 			}
 		}
 		UpdateMap();
 	}
 
+	/// <summary>
+	/// Updates the map mesh so the voxels are visible
+	/// </summary>
 	public void UpdateMap()
 	{
-		var mesh = MeshCreator.CreateNewMesh(_Voxels);
-		gameObject.GetComponent<MeshFilter>().mesh = mesh;
+		// Update each chunk
+		foreach (var chunk in _Chunks.Values)
+		{
+			chunk.UpdateChunk();
+		}
 	}
 
+	/// <summary>
+	/// Just for checking if everything is working
+	/// </summary>
 	private void Start()
 	{
-		//SetVoxelBlock(new Vector3Int(-10, -10, -10), new Vector3Int(10, 10, 10), true);
+		for (int x = 0; x < 30; x += 2)
+		{
+			for (int y = 0; y < 30; y += 2)
+			{
+				for (int z = 0; z < 26; z += 2)
+				{
+					SetVoxel(new Vector3Int(x, y, z), VoxelType.SteelHull, false);
+				}
+			}
+		}
+		UpdateMap();
 	}
-
 }

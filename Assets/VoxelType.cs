@@ -1,10 +1,6 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-
+﻿/// <summary>
+/// Temporary enum for different types of voxels
+/// </summary>
 public enum VoxelType
 {
 	Empty,
@@ -12,4 +8,3 @@ public enum VoxelType
 	SteelHull,
 	CobaltHull
 }
-
