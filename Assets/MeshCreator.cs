@@ -21,7 +21,7 @@ public static class MeshCreator
 	/// </summary>
 	/// <param name="voxels">Voxels of the chunk</param>
 	/// <returns></returns>
-	public static Mesh CreateNewMesh(Dictionary<Vector3Int, VoxelType> voxels)
+	public static Mesh CreateNewMesh(IEnumerable<VoxelRenderData> voxels)
 	{
 		// Initialize vertices, triangles, normals and UVs
 
@@ -30,18 +30,13 @@ public static class MeshCreator
 		var normals = new List<Vector3>();
 		var uvs = new List<Vector2>();
 
-		// Create all the faces
+		// Create all faces
 
-		foreach (var voxel in voxels.Where(x => x.Value != VoxelType.Empty))
+		foreach (var voxel in voxels)
 		{
-			foreach (VoxelFace face in Enum.GetValues(typeof(VoxelFace)))
+			foreach (var face in voxel.FacesToRended)
 			{
-				var direction = FaceToDirection(face);
-
-				var neighbourState = voxels.TryGetValue(voxel.Key + direction, out var state) ? state : VoxelType.Empty;
-
-				if (neighbourState == VoxelType.Empty)
-					CreateFace(voxel.Key, voxel.Value, face, ref vertices, ref triangles, ref normals, ref uvs);
+				CreateFace(voxel.Position, voxel.Type, face, ref vertices, ref triangles, ref normals, ref uvs);
 			}
 		}
 
@@ -148,7 +143,7 @@ public static class MeshCreator
 					new Vector3(-0.5f,0.5f,-0.5f),
 					new Vector3(0.5f,0.5f,-0.5f),
 					new Vector3(0.5f,-0.5f,-0.5f),
-					new Vector3(-0.5f,0.5f,-0.5f),
+					new Vector3(-0.5f,-0.5f,-0.5f),
 				};
 
 			case VoxelFace.East:
@@ -251,38 +246,64 @@ public static class MeshCreator
 	}
 
 	/// <summary>
-	/// Faces of the voxel
+	/// Gets a oposite face to given one
 	/// </summary>
-	public enum VoxelFace
+	/// <param name="face">Source face</param>
+	/// <returns>Oposite face</returns>
+	public static VoxelFace GetOpositeFace(VoxelFace face)
 	{
-		/// <summary>
-		/// Z+
-		/// </summary>
-		North,
-
-		/// <summary>
-		/// Z-
-		/// </summary>
-		South,
-
-		/// <summary>
-		/// X+
-		/// </summary>
-		East,
-
-		/// <summary>
-		/// X-
-		/// </summary>
-		West,
-
-		/// <summary>
-		/// Y+
-		/// </summary>
-		Up,
-
-		/// <summary>
-		/// Y-
-		/// </summary>
-		Down
+		switch (face)
+		{
+			case VoxelFace.North:
+				return VoxelFace.South;
+			case VoxelFace.South:
+				return VoxelFace.North;
+			case VoxelFace.East:
+				return VoxelFace.West;
+			case VoxelFace.West:
+				return VoxelFace.East;
+			case VoxelFace.Up:
+				return VoxelFace.Down;
+			case VoxelFace.Down:
+				return VoxelFace.Up;
+			default:
+				throw new ArgumentException("You have given me invalid face");
+		}
 	}
+
+}
+/// <summary>
+/// Faces of the voxel
+/// </summary>
+public enum VoxelFace
+{
+	/// <summary>
+	/// Z+
+	/// </summary>
+	North,
+
+	/// <summary>
+	/// Z-
+	/// </summary>
+	South,
+
+	/// <summary>
+	/// X+
+	/// </summary>
+	East,
+
+	/// <summary>
+	/// X-
+	/// </summary>
+	West,
+
+	/// <summary>
+	/// Y+
+	/// </summary>
+	Up,
+
+	/// <summary>
+	/// Y-
+	/// </summary>
+	Down
 }

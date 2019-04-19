@@ -91,14 +91,15 @@ public class VoxelMap : MonoBehaviour
 	/// </summary>
 	/// <param name="fromPosition">Start position</param>
 	/// <param name="toPosition">End position</param>
+	/// <param name="gridSize">Spaceing of the voxels</param>
 	/// <param name="type">To what it should be change</param>
-	public void SetVoxelBlock(Vector3Int fromPosition, Vector3Int toPosition, VoxelType type)
+	public void SetVoxelGrid(Vector3Int fromPosition, Vector3Int toPosition, int gridSize, VoxelType type)
 	{
-		for (int x = fromPosition.x; x <= toPosition.x; x++)
+		for (int x = fromPosition.x; x <= toPosition.x; x += gridSize)
 		{
-			for (int y = fromPosition.y; y <= toPosition.y; y++)
+			for (int y = fromPosition.y; y <= toPosition.y; y += gridSize)
 			{
-				for (int z = fromPosition.z; z <= toPosition.z; z++)
+				for (int z = fromPosition.z; z <= toPosition.z; z += gridSize)
 				{
 					SetVoxel(new Vector3Int(x, y, z), type, false);
 				}
@@ -106,6 +107,8 @@ public class VoxelMap : MonoBehaviour
 		}
 		UpdateMap();
 	}
+
+
 
 	/// <summary>
 	/// Updates the map mesh so the voxels are visible
@@ -124,16 +127,7 @@ public class VoxelMap : MonoBehaviour
 	/// </summary>
 	private void Start()
 	{
-		for (int x = 0; x < 30; x += 2)
-		{
-			for (int y = 0; y < 30; y += 2)
-			{
-				for (int z = 0; z < 26; z += 2)
-				{
-					SetVoxel(new Vector3Int(x, y, z), VoxelType.SteelHull, false);
-				}
-			}
-		}
-		UpdateMap();
+		SetVoxelGrid(Vector3Int.zero, Vector3Int.one * 13, 1, VoxelType.IronHull);
+		//SetVoxel(Vector3Int.zero, VoxelType.CobaltHull);
 	}
 }
