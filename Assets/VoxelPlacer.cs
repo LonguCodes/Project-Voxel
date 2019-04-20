@@ -26,7 +26,7 @@ public class VoxelPlacer : MonoBehaviour
 		if (Input.GetMouseButtonDown(1))
 			Remove();
 	}
-	
+
 	/// <summary>
 	/// Places the voxel under the mouse cursor
 	/// </summary>
@@ -46,7 +46,7 @@ public class VoxelPlacer : MonoBehaviour
 	/// </summary>
 	public void Remove()
 	{
-		// If there is nothing under the cursor, return 
+		// If there is nothing under the cursor, return
 		if (!TryGetVoxelUnderCursor(out var position, out var direction))
 			return;
 

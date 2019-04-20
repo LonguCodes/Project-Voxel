@@ -31,7 +31,12 @@ public class VoxelMap : MonoBehaviour
 		if (_Instance is null)
 			_Instance = this;
 		else
+		{
 			Destroy(gameObject);
+			return;
+		}
+		VoxelHelper.RegisterAllVoxels();
+		VoxelTextureHelper.CreateTextueMap();
 	}
 
 	#endregion Singleton
@@ -46,7 +51,7 @@ public class VoxelMap : MonoBehaviour
 	/// </summary>
 	/// <param name="position">World position of the voxel</param>
 	/// <returns></returns>
-	public VoxelType this[Vector3Int position] => _Chunks.TryGetValue(GetChunkPosition(position), out var chunk) ? chunk[position] : VoxelType.Empty;
+	public VoxelBase this[Vector3Int position] => _Chunks.TryGetValue(GetChunkPosition(position), out var chunk) ? chunk[position] : VoxelHelper.Empty;
 
 	/// <summary>
 	/// Calculates the position of the chunk from the world position of the voxel
@@ -108,8 +113,6 @@ public class VoxelMap : MonoBehaviour
 		UpdateMap();
 	}
 
-
-
 	/// <summary>
 	/// Updates the map mesh so the voxels are visible
 	/// </summary>
@@ -120,14 +123,5 @@ public class VoxelMap : MonoBehaviour
 		{
 			chunk.UpdateChunk();
 		}
-	}
-
-	/// <summary>
-	/// Just for checking if everything is working
-	/// </summary>
-	private void Start()
-	{
-		SetVoxelGrid(Vector3Int.zero, Vector3Int.one * 13, 1, VoxelType.IronHull);
-		//SetVoxel(Vector3Int.zero, VoxelType.CobaltHull);
 	}
 }

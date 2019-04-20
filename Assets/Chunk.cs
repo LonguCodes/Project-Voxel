@@ -1,6 +1,5 @@
 ﻿using System;
 using System.Collections.Generic;
-using System.Linq;
 using UnityEngine;
 
 public class Chunk : MonoBehaviour
@@ -13,7 +12,7 @@ public class Chunk : MonoBehaviour
 	/// <summary>
 	/// Voxels in the chunk
 	/// </summary>
-	private Dictionary<Vector3Int, VoxelType> _Voxels = new Dictionary<Vector3Int, VoxelType>();
+	private Dictionary<Vector3Int, VoxelBase> _Voxels = new Dictionary<Vector3Int, VoxelBase>();
 
 	/// <summary>
 	/// This holds info which blocks should be calculating when updating the chunk
@@ -41,7 +40,11 @@ public class Chunk : MonoBehaviour
 		chunk.gameObject.AddComponent<MeshFilter>();
 		chunk.gameObject.AddComponent<MeshRenderer>();
 		chunk.gameObject.AddComponent<MeshCollider>();
-		chunk.gameObject.GetComponent<MeshRenderer>().material = new Material(Shader.Find("Standard"));
+		var material = new Material(Shader.Find("Standard"))
+		{
+			mainTexture = VoxelTextureHelper.TextureMap
+		};
+		chunk.gameObject.GetComponent<MeshRenderer>().material = material;
 		chunk.Position = position;
 		chunk.transform.position = position * CHUNK_SIZE;
 		return chunk;
@@ -83,13 +86,13 @@ public class Chunk : MonoBehaviour
 	/// </summary>
 	/// <param name="position">World position of the voxel</param>
 	/// <returns></returns>
-	public VoxelType this[Vector3Int position]
+	public VoxelBase this[Vector3Int position]
 	{
 		get
 		{
 			// If the voxel is in the chunk, return it
 			if (IsInsideChunk(position))
-				return _Voxels.TryGetValue(ToRelativePosition(position), out var state) ? state : VoxelType.Empty;
+				return _Voxels.TryGetValue(ToRelativePosition(position), out var voxel) ? voxel : VoxelHelper.Empty;
 			// If not, redirect it to the VoxelMap
 			return VoxelMap.Instance[position];
 		}
@@ -99,19 +102,19 @@ public class Chunk : MonoBehaviour
 	/// Sets the voxel in the chunk
 	/// </summary>
 	/// <param name="position"></param>
-	/// <param name="state"></param>
+	/// <param name="type"></param>
 	/// <param name="update"></param>
-	public void SetVoxel(Vector3Int position, VoxelType state, bool update = true)
+	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true)
 	{
 		// If the voxels wouldn't be in the chunk, redirect to VoxelMap
 		if (!IsInsideChunk(position))
 		{
-			VoxelMap.Instance.SetVoxel(position, state, update);
+			VoxelMap.Instance.SetVoxel(position, type, update);
 			return;
 		}
 
 		// If it would change nothing, return
-		if (this[position] == state)
+		if (this[position].Type == type)
 			return;
 
 		// Create a set of chunks to update
@@ -148,8 +151,9 @@ public class Chunk : MonoBehaviour
 		position = ToRelativePosition(position);
 
 		// Set the voxel
-		_Voxels[position] = state;
-
+		_Voxels[position] = VoxelHelper.CreateVoxel(position, type);
+		if (_VoxelRenderData.ContainsKey(position))
+			_VoxelRenderData.Remove(position);
 
 		// If shoudl update, update all marked chunks
 		if (update)
@@ -172,26 +176,25 @@ public class Chunk : MonoBehaviour
 			var position = ToRelativePosition(worldPosition);
 
 			// Check if the voxel exists and is not empty
-			if (this[worldPosition] == VoxelType.Empty)
+			if (this[worldPosition].Type == VoxelType.Empty)
 				continue;
 
 			// Get the direction
 			var direction = MeshCreator.FaceToDirection(face);
 
 			// Get the neighbour state
-			var neighbourState = VoxelMap.Instance[worldPosition + direction];
+			var neighbour = VoxelMap.Instance[worldPosition + direction];
 
 			// If the neighbour is empty, render the face
-			if (neighbourState == VoxelType.Empty)
+			if (_Voxels[position].ShouldAllwaysRender(face) || neighbour.ShouldAllwaysRenderNeighbour(MeshCreator.GetOpositeFace(face)))
 			{
 				// If the render data of the voxel was not created already, create one
 				if (!_VoxelRenderData.ContainsKey(position))
-					_VoxelRenderData.Add(position, new VoxelRenderData(position, _Voxels[position]));
+					_VoxelRenderData.Add(position, new VoxelRenderData(_Voxels[position]));
 
 				// Set the face as rendered
 				_VoxelRenderData[position].FacesToRended.Add(face);
 			}
-
 		}
 		// Clear the to update because we already calculated all of them
 		_ToUpdate.Clear();

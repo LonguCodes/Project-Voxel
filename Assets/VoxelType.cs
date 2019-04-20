@@ -1,5 +1,6 @@
 ﻿/// <summary>
-/// Temporary enum for different types of voxels
+/// Different types of voxels
+/// Used as an id
 /// </summary>
 public enum VoxelType
 {

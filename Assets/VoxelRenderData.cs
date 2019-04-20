@@ -1,16 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-using UnityEngine;
+﻿using System.Collections.Generic;
 
 public struct VoxelRenderData
 {
-	/// <summary>
-	/// Position of the voxel
-	/// </summary>
-	public Vector3Int Position { get; }
+	public VoxelBase Voxel { get; }
 
 	/// <summary>
 	/// Faces to render
@@ -18,21 +10,13 @@ public struct VoxelRenderData
 	public HashSet<VoxelFace> FacesToRended { get; }
 
 	/// <summary>
-	/// Type of the voxel
-	/// </summary>
-	public VoxelType Type { get; }
-
-
-	/// <summary>
 	/// Default constructor
 	/// </summary>
 	/// <param name="position">Position of the voxel</param>
 	/// <param name="type">Type of the voxel</param>
-	public VoxelRenderData(Vector3Int position, VoxelType type) : this()
+	public VoxelRenderData(VoxelBase voxel) : this()
 	{
-		Position = position;
+		Voxel = voxel;
 		FacesToRended = new HashSet<VoxelFace>();
-		Type = type;
 	}
 }
-
