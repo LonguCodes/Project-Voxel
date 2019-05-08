@@ -5,9 +5,11 @@ using UnityEngine;
 
 public static class VoxelHelper
 {
-	public static VoxelBase CreateVoxel(Vector3Int position, VoxelType type)
+	public static VoxelBase CreateVoxel(Vector3Int position, VoxelType type, object context = null)
 	{
-		return (VoxelBase)Activator.CreateInstance(_VoxelTypes[type], position);
+		if (context is null)
+			return (VoxelBase)Activator.CreateInstance(_VoxelTypes[type], position);
+		return (VoxelBase)Activator.CreateInstance(_VoxelTypes[type], position, context);
 	}
 
 	private static VoxelBase _Empty;
@@ -31,8 +33,9 @@ public static class VoxelHelper
 
 	public static void RegisterAllVoxels()
 	{
+
 		_VoxelTypes = typeof(VoxelBase).Assembly.GetTypes()
-			.Where(x => x.BaseType == typeof(VoxelBase) && x.IsClass && !x.IsAbstract)
+			.Where(x => x.IsSubclassOf(typeof(VoxelBase)) && !x.IsAbstract)
 			.ToDictionary(x => ((VoxelBase)Activator.CreateInstance(x, Vector3Int.zero)).Type, x => x);
 	}
 

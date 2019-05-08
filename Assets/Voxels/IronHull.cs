@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Iron hull class
@@ -16,7 +17,7 @@ public class IronHull : VoxelBase
 	/// <summary>
 	/// Override of the texture path
 	/// </summary>
-	public override string TexturePath => "IronHull.png";
+	public override IEnumerable<(string,string)> Textures => new[] { ("Default","IronHull.png") };
 
 	#endregion
 

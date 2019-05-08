@@ -11,10 +11,15 @@ public abstract class VoxelBase
 	#region Properties
 
 	/// <summary>
-	/// Position of the voxel
+	/// Position of the voxel.
 	/// Set when creating the voxel
 	/// </summary>
-	public Vector3Int Postion { get; }
+	public Vector3Int Position { get; }
+
+	/// <summary>
+	/// Relative position of the voxel inside chunk
+	/// </summary>
+	public Vector3Int RelativePosition { get; }
 
 	/// <summary>
 	/// Type of the voxel
@@ -27,7 +32,9 @@ public abstract class VoxelBase
 	/// Path to the texture
 	/// Has to be set from child
 	/// </summary>
-	public abstract string TexturePath { get; }
+	public abstract IEnumerable<(string Identifier, string Path)> Textures { get; }
+
+	private string _DefaultUVPath { get;  }
 
 	#endregion
 
@@ -40,7 +47,19 @@ public abstract class VoxelBase
 	/// <param name="position"></param>
 	protected VoxelBase(Vector3Int position)
 	{
-		Postion = position;
+		Position = position;
+		RelativePosition = Chunk.ToRelativePosition(position);
+		_DefaultUVPath = Textures.FirstOrDefault().Identifier;
+	}
+
+	/// <summary>
+	/// Context constructor
+	/// Not public because the function is abstract
+	/// </summary>
+	/// <param name="position"></param>
+	protected VoxelBase(Vector3Int position, object context):this(position)
+	{
+		
 	}
 
 	#endregion
@@ -56,7 +75,7 @@ public abstract class VoxelBase
 	public virtual void CreateFace(VoxelFace face, ref MeshData data)
 	{
 		// Offset all the vertecies accorting to position
-		var faceVertecies = GetCubeVerticies(face).Select(vertexPosition => vertexPosition + Postion);
+		var faceVertecies = GetCubeVerticies(face).Select(vertexPosition => vertexPosition + RelativePosition);
 
 		var currentIndex = data.Vertices.Count;
 
@@ -95,8 +114,11 @@ public abstract class VoxelBase
 			}
 		);
 
+		if (_DefaultUVPath is null)
+			return;
+
 		// Calculate the base uv
-		var baseUV = VoxelTextureHelper.GetBaseUV(Type);
+		var baseUV = VoxelTextureHelper.GetBaseUV(Type,_DefaultUVPath);
 
 		// Apply the uvs
 		data.UVs.AddRange(

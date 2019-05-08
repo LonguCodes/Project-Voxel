@@ -40,10 +40,8 @@ public class Chunk : MonoBehaviour
 		chunk.gameObject.AddComponent<MeshFilter>();
 		chunk.gameObject.AddComponent<MeshRenderer>();
 		chunk.gameObject.AddComponent<MeshCollider>();
-		var material = new Material(Shader.Find("Standard"))
-		{
-			mainTexture = VoxelTextureHelper.TextureMap
-		};
+		var material = VoxelMap.Instance.ChunkMaterial;
+		material.mainTexture = VoxelTextureHelper.TextureMap;
 		chunk.gameObject.GetComponent<MeshRenderer>().material = material;
 		chunk.Position = position;
 		chunk.transform.position = position * CHUNK_SIZE;
@@ -66,9 +64,9 @@ public class Chunk : MonoBehaviour
 	/// </summary>
 	/// <param name="worldPosition">World position of the voxel</param>
 	/// <returns>Releative position of the voxel</returns>
-	public Vector3Int ToRelativePosition(Vector3Int worldPosition)
+	public static Vector3Int ToRelativePosition(Vector3Int worldPosition)
 	{
-		return worldPosition - Position * CHUNK_SIZE;
+		return worldPosition - VoxelMap.GetChunkPosition(worldPosition) * CHUNK_SIZE;
 	}
 
 	/// <summary>
@@ -79,6 +77,16 @@ public class Chunk : MonoBehaviour
 	public Vector3Int ToWorldPositon(Vector3Int releativePosition)
 	{
 		return Position * CHUNK_SIZE + releativePosition;
+	}
+
+	/// <summary>
+	/// Calculates the world position from releative position
+	/// </summary>
+	/// <param name="relativePosition">Releative position of the voxel</param>
+	/// <returns>World position of the voxel</returns>
+	public static Vector3Int ToWorldPositon(Vector3Int relativePosition, Vector3Int chunkPosition)
+	{
+		return chunkPosition * CHUNK_SIZE + relativePosition;
 	}
 
 	/// <summary>
@@ -104,7 +112,7 @@ public class Chunk : MonoBehaviour
 	/// <param name="position"></param>
 	/// <param name="type"></param>
 	/// <param name="update"></param>
-	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true)
+	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true, object context = null)
 	{
 		// If the voxels wouldn't be in the chunk, redirect to VoxelMap
 		if (!IsInsideChunk(position))
@@ -148,12 +156,16 @@ public class Chunk : MonoBehaviour
 		}
 
 		// Calculate the releative position
-		position = ToRelativePosition(position);
+		Debug.Log(position);
+		var relativePosition = ToRelativePosition(position);
+
+
+		Debug.Log(relativePosition);
 
 		// Set the voxel
-		_Voxels[position] = VoxelHelper.CreateVoxel(position, type);
-		if (_VoxelRenderData.ContainsKey(position))
-			_VoxelRenderData.Remove(position);
+		_Voxels[relativePosition] = VoxelHelper.CreateVoxel(position, type, context);
+		if (_VoxelRenderData.ContainsKey(relativePosition))
+			_VoxelRenderData.Remove(relativePosition);
 
 		// If shoudl update, update all marked chunks
 		if (update)
@@ -233,4 +245,7 @@ public class Chunk : MonoBehaviour
 		if (_VoxelRenderData.TryGetValue(relativePosition, out var renderData) && renderData.FacesToRended.Contains(face))
 			_VoxelRenderData[relativePosition].FacesToRended.Remove(face);
 	}
+
+
+
 }

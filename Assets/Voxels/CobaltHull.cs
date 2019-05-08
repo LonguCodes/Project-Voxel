@@ -1,4 +1,5 @@
-﻿using System.Linq;
+﻿using System.Collections.Generic;
+using System.Linq;
 using UnityEngine;
 
 /// <summary>
@@ -12,7 +13,7 @@ public class CobaltHull : VoxelBase
 	/// <summary>
 	/// Override of the path
 	/// </summary>
-	public override string TexturePath => "CobaltHull.png";
+	public override IEnumerable<(string, string)> Textures => new[] { ("Default", "CobaltHull.png"), ("NoHole", "CobaltHullNoHole.png") };
 
 	/// <summary>
 	/// Override of the type
@@ -43,7 +44,7 @@ public class CobaltHull : VoxelBase
 	public override void CreateFace(VoxelFace face, ref MeshData data)
 	{
 		// Offset all the vertecies accorting to position
-		var faceVertecies = GetCubeVerticies(face).Select(vertexPosition => vertexPosition * 0.5f + Postion);
+		var faceVertecies = GetCubeVerticies(face).Select(vertexPosition => vertexPosition * 0.5f + RelativePosition);
 
 		var currentIndex = data.Vertices.Count;
 
@@ -83,7 +84,7 @@ public class CobaltHull : VoxelBase
 		);
 
 		// Calculate the base UV
-		var baseUV = VoxelTextureHelper.GetBaseUV(VoxelType.CobaltHull);
+		var baseUV = face == VoxelFace.Up || face == VoxelFace.Down ? VoxelTextureHelper.GetBaseUV(Type, "NoHole") : VoxelTextureHelper.GetBaseUV(Type);
 
 		// Apply the UVs
 		data.UVs.AddRange(

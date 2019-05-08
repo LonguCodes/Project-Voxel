@@ -18,6 +18,8 @@ public class VoxelMap : MonoBehaviour
 		}
 	}
 
+
+
 	/// <summary>
 	/// Private instance of the VoxelMap
 	/// </summary>
@@ -39,12 +41,22 @@ public class VoxelMap : MonoBehaviour
 		VoxelTextureHelper.CreateTextueMap();
 	}
 
+
+
 	#endregion Singleton
 
+
+	#region Fields
+
+	[SerializeField] private Material _ChunkMaterial;
+
+	#endregion
 	/// <summary>
 	/// Chunks in the world
 	/// </summary>
 	private Dictionary<Vector3Int, Chunk> _Chunks = new Dictionary<Vector3Int, Chunk>();
+
+	public Material ChunkMaterial => _ChunkMaterial;
 
 	/// <summary>
 	/// Gets the type of the voxel from it's world position
@@ -76,7 +88,8 @@ public class VoxelMap : MonoBehaviour
 	/// <param name="position">Position of the voxel</param>
 	/// <param name="type">Type of the voxel</param>
 	/// <param name="update">Should the map be updated after the set</param>
-	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true)
+	/// <param name="context">Context for creating the voxel</param>
+	public void SetVoxel(Vector3Int position, VoxelType type, bool update = true, object context = null)
 	{
 		// Check if chunk that would hold the block exists
 		// If not, create one
@@ -87,7 +100,7 @@ public class VoxelMap : MonoBehaviour
 		}
 
 		// Sets the voxel
-		chunk.SetVoxel(position, type, update);
+		chunk.SetVoxel(position, type, update, context);
 	}
 
 	/// <summary>
@@ -123,5 +136,11 @@ public class VoxelMap : MonoBehaviour
 		{
 			chunk.UpdateChunk();
 		}
+	}
+
+	private void Start()
+	{
+		SetVoxel(new Vector3Int(0, 0, 1), VoxelType.IronHull);
+		SetVoxel(new Vector3Int(0, 0, 0), VoxelType.IronHull);
 	}
 }

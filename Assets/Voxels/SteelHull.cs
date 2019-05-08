@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Steel hull class
@@ -16,7 +17,7 @@ public class SteelHull : VoxelBase
 	/// <summary>
 	/// Override of the texture path
 	/// </summary>
-	public override string TexturePath => "SteelHull.png";
+	public override IEnumerable<(string,string)> Textures => new[] { ("Default","SteelHull.png") };
 
 	#endregion
 

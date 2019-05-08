@@ -7,5 +7,6 @@ public enum VoxelType
 	Empty,
 	IronHull,
 	SteelHull,
-	CobaltHull
+	CobaltHull,
+	Morphling
 }

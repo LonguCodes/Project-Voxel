@@ -1,4 +1,5 @@
-﻿using UnityEngine;
+﻿using System.Collections.Generic;
+using UnityEngine;
 
 /// <summary>
 /// Dummy class for empty voxels
@@ -16,16 +17,16 @@ public class Empty : VoxelBase
 	/// Override of the texture path
 	/// We don't care what's here
 	/// </summary>
-	public override string TexturePath => "";
+	public override IEnumerable<(string,string)> Textures => new (string,string)[0];
 
 	#endregion
 
-	#region Constructors
+		#region Constructors
 
-	/// <summary>
-	/// Default constructor override
-	/// </summary>
-	/// <param name="position"></param>
+		/// <summary>
+		/// Default constructor override
+		/// </summary>
+		/// <param name="position"></param>
 	public Empty(Vector3Int position) : base(position)
 	{
 	}
